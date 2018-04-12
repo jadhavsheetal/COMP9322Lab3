@@ -22,8 +22,8 @@ swagger = Swagger(app)
 
 
 @app.route('/')
-def hello_world():
-    return 'Hello, World!'
+def welcome():
+    return 'Welcome'
 
 @app.route('/users/signup/', methods=['POST'])
 def user_signup():
@@ -169,6 +169,12 @@ def user_details(user_id):
             username:
               type: string
               description: The user name.
+            description:
+              type: string
+              description: A short description about the user.
+            affiliation:
+              type: string
+              description: A group/organisation the user is affiliated with.
       401:
         description: "Invalid Credentials"
     """
@@ -188,7 +194,7 @@ def user_details(user_id):
 
 @app.route('/users/all/')
 def list_all_users():
-    """ Return user details
+    """ List all users
     ---
     /users/all/:
 
@@ -208,6 +214,12 @@ def list_all_users():
             username:
               type: string
               description: The user name.
+            description:
+              type: string
+              description: A short description about the user.
+            affiliation:
+              type: string
+              description: A group/organisation the user is affiliated with.
       401:
         descriptiosn: "Invalid Credentials"
     """
@@ -226,6 +238,56 @@ def list_all_users():
     else:
         return 'No Users signed up yet', 404
 
+
+@app.route('/users/affiliation/<string:affiliation>/')
+def user__affiliation(affiliation):
+    """ Search users affiliated with a group/organisation
+    ---
+    /users/{user_id}/:
+    parameters:
+      - in: path
+        name: affiliation
+        type: string
+        required: true
+        description: Affiliation of the user.
+    responses:
+      200:
+        description: A User object
+        schema:
+          type: object
+          properties:
+            first_name:
+              type: string
+              description: The first name of the user
+            last_name:
+              type: string
+              description: The last name of the user
+            username:
+              type: string
+              description: The user name.
+            description:
+              type: string
+              description: A short description about the user.
+            affiliation:
+              type: string
+              description: A group/organisation the user is affiliated with.
+      401:
+        description: "Invalid Credentials"
+    """
+    users = User.query.filter_by(affiliation=affiliation).all()
+    if users:
+        userList = []
+        for user in users :
+            userList.append({
+            'username': user.username,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'description': user.description,
+            'affiliation': user.affiliation,
+            })
+        return jsonify({"users" : userList})
+    else:
+        return 'No Users present for this affiliation', 404
 
 @app.errorhandler(404)
 def page_not_found(e):

@@ -12,8 +12,8 @@ class User(db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(20), nullable=False)
     signup_date = db.Column(db.DateTime, default=datetime.datetime.utcnow)
-    description = db.Column(db.String(320), nullable=False)
-    affiliation = db.Column(db.String(120), nullable=False)
+    description = db.Column(db.String(320), nullable=True)
+    affiliation = db.Column(db.String(120), nullable=True)
 
     def __repr__(self):
         return '<User %r>' % self.username
