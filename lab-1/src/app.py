@@ -21,6 +21,10 @@ app.config['SWAGGER'] = {
 swagger = Swagger(app)
 
 
+@app.route('/')
+def hello_world():
+    return 'Hello, World!'
+
 @app.route('/users/signup/', methods=['POST'])
 def user_signup():
     """ New User Signup
@@ -49,6 +53,10 @@ def user_signup():
             type: "string"
           password:
             type: "string"
+          description:
+            type: "string"
+          affiliation:
+            type: "string"
     """
     user_data = request.json
     user = User(
@@ -57,6 +65,8 @@ def user_signup():
         username=user_data.get('username'),
         email=user_data.get('email'),
         password_hash=generate_password_hash(user_data.get('password')),
+        description=user_data.get('description'),
+        affiliation=user_data.get('affiliation'),
     )
     db.session.add(user)
     db.session.commit()
@@ -98,7 +108,8 @@ def user_login():
         # generate a token
         s = TimedSerializer(SECRET_KEY)
         token = s.dumps({'user_id': user.id})
-        return token
+
+        return "Welcome %s, Your token is %s " % (user.first_name, token)
     else:
         return 'Invalid Credentials', 401
 
@@ -124,7 +135,6 @@ def check_token():
           token:
             type: "string"
     """
-
     token = request.json.get('token')
     user = User.verify_auth_token(token)
     if user:
@@ -168,9 +178,53 @@ def user_details(user_id):
             'username': user.username,
             'first_name': user.first_name,
             'last_name': user.last_name,
+            'description': user.description,
+            'affiliation': user.affiliation,
         })
     else:
         return 'User not found', 404
+
+
+
+@app.route('/users/all/')
+def list_all_users():
+    """ Return user details
+    ---
+    /users/all/:
+
+
+    responses:
+      200:
+        description: A User object
+        schema:
+          type: object
+          properties:
+            first_name:
+              type: string
+              description: The first name of the user
+            last_name:
+              type: string
+              description: The last name of the user
+            username:
+              type: string
+              description: The user name.
+      401:
+        descriptiosn: "Invalid Credentials"
+    """
+    users = User.query.all()
+    if users:
+        userList = []
+        for user in users :
+            userList.append({
+            'username': user.username,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'description': user.description,
+            'affiliation': user.affiliation,
+            })
+        return jsonify({"users" : userList})
+    else:
+        return 'No Users signed up yet', 404
 
 
 @app.errorhandler(404)
