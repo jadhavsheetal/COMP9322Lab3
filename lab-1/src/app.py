@@ -59,21 +59,25 @@ def user_signup():
             type: "string"
     """
     user_data = request.json
-    user = User(
-        first_name=user_data.get('first_name'),
-        last_name=user_data.get('last_name'),
-        username=user_data.get('username'),
-        email=user_data.get('email'),
-        password_hash=generate_password_hash(user_data.get('password')),
-        description=user_data.get('description'),
-        affiliation=user_data.get('affiliation'),
-    )
-    db.session.add(user)
-    db.session.commit()
 
-    # TODO: DB error handling
+    if user_data.get('username') is None or user_data.get('password') is None or user_data.get('first_name') is None  or user_data.get('last_name') is None :
+        return "Missing mandatory input",  400
+    else :
+        user = User(
+            first_name=user_data.get('first_name'),
+            last_name=user_data.get('last_name'),
+            username=user_data.get('username'),
+            email=user_data.get('email'),
+            password_hash=generate_password_hash(user_data.get('password')),
+            description=user_data.get('description'),
+            affiliation=user_data.get('affiliation'),
+        )
+        db.session.add(user)
+        db.session.commit()
 
-    return jsonify({'user_id': user.id})
+        # TODO: DB error handling
+
+        return jsonify({'user_id': user.id})
 
 
 @app.route('/users/login/', methods=['POST'])
@@ -103,12 +107,16 @@ def user_login():
     username = user_details.get('username')
     password = user_details.get('password')
     user = User.query.filter_by(username=username).first()
-    password_hash = user.password_hash
-    if check_password_hash(password_hash, password):
-        # generate a token
-        s = TimedSerializer(SECRET_KEY)
-        token = s.dumps({'user_id': user.id})
+    validLogin = False
+    if user != None :
+        password_hash = user.password_hash
+        if check_password_hash(password_hash, password):
+            # generate a token
+            s = TimedSerializer(SECRET_KEY)
+            token = s.dumps({'user_id': user.id})
+            validLogin = True
 
+    if validLogin :
         return "Welcome %s, Your token is %s " % (user.first_name, token)
     else:
         return 'Invalid Credentials', 401
