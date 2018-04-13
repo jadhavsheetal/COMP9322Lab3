@@ -60,7 +60,7 @@ def user_signup():
     """
     user_data = request.json
 
-    if user_data.get('username') is None or user_data.get('password') is None or user_data.get('first_name') is None  or user_data.get('last_name') is None :
+    if user_data.get('username') is None or user_data.get('password') is None or user_data.get('email') is None or user_data.get('first_name') is None  or user_data.get('last_name') is None :
         return "Missing mandatory input",  400
     else :
         user = User(
